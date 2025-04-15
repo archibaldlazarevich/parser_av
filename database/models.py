@@ -21,6 +21,7 @@ class Cars(Base):
         Date, default=datetime.date, nullable=False
     )
     price: Mapped[int] = mapped_column(Integer, nullable=False)
+    odometer: Mapped[int] = mapped_column(Integer, nullable=False)
 
     def __repr__(self) -> str:
         return (
