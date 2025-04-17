@@ -1,0 +1,41 @@
+services:
+  app:
+    container_name: app
+    build:
+      dockerfile: ./Dockerfile
+    networks:
+      - backend
+    command: bash -c 'while !</dev/tcp/postgres/5432; do sleep 3; done; python -m src.main'
+    ports:
+      - '8000:8000'
+    depends_on:
+      - postgres
+    env_file:
+      - .env
+    logging:
+      driver: 'json-file'
+      options:
+        max-file: '10'
+        max-size: '200k'
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://admin:admin@postgres:5432/admin
+
+  postgres:
+    container_name: postgres
+    image: postgres
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=admin
+      - log_destination=stderr
+    ports:
+      - '5432:5432'
+    networks:
+      - backend
+    volumes:
+      - /var/lib/postgresql/data
+
+networks:
+  backend:
+    driver: bridge
+
