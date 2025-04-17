@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.filters import CommandStart
 from aiogram.types import Message
-from telegram_bot.middlewares.middlewares import TestMiddleware
+from src.telegram_bot.middlewares.middlewares import TestMiddleware
 
 router_start = Router()
 

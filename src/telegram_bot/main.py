@@ -4,8 +4,10 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from sqlalchemy.util import await_only
-from handlers.default.start import router_start
-from handlers.default.help import router_help
+from src.telegram_bot.handlers.default.start import router_start
+from src.telegram_bot.handlers.default.help import router_help
+from src.telegram_bot.handlers.custom.check_cars_number import router_cars_number
+from src.telegram_bot.handlers.custom.get_all_cars_by_model import router_cars_model
 
 from config.config import BOT_TOKEN
 
@@ -16,7 +18,8 @@ async def set_commands():
     commands = [
         BotCommand(command='start', description='Запустить бота!'),
         BotCommand(command='help', description='Справка'),
-        BotCommand(command='model', description='Выбрать интересующую модель')
+        BotCommand(command='number', description='Количество автомобилей в базе'),
+        BotCommand(command='models', description='Список моделей авто'),
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
@@ -27,6 +30,8 @@ async def main():
     dp.include_routers(
         router_help,
         router_start,
+        router_cars_number,
+        router_cars_model,
     )
     dp.startup.register(start_bot)
     try:

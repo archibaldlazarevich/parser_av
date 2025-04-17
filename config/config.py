@@ -14,5 +14,6 @@ BOT_TOKEN: str = cast(str, os.getenv("BOT_TOKEN"))
 DEFAULT_COMMANDS = (
     ('start', 'Запустить бота'),
     ('help', 'Справка'),
-    ('model', 'Выбрать интересующую модель'),
+    ('number', 'Количество автомобилей в базе'),
+    ('models', 'Список моделей авто')
 )

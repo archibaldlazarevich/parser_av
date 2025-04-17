@@ -15,12 +15,13 @@ class Cars(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
     site: Mapped[str] = mapped_column(String(20), nullable=False)
-    link: Mapped[str] = mapped_column(String(), nullable=False)
+    link: Mapped[str] = mapped_column(String(), nullable=False, unique=True)
     date_pub: Mapped[datetime.datetime] = mapped_column(Date, nullable=False)
     date_add: Mapped[datetime.datetime] = mapped_column(
-        Date, default=datetime.date, nullable=False
+        Date, default=datetime.datetime.today()
     )
-    price: Mapped[int] = mapped_column(Integer, nullable=False)
+    price_usd: Mapped[int] = mapped_column(Integer, nullable=False)
+    price_blr: Mapped[int] = mapped_column(Integer, nullable=False)
     odometer: Mapped[int] = mapped_column(Integer, nullable=False)
 
     def __repr__(self) -> str:

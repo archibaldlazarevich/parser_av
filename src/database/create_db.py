@@ -1,3 +1,7 @@
+import asyncio
+from contextlib import asynccontextmanager
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     AsyncEngine,
@@ -7,8 +11,7 @@ from sqlalchemy.ext.asyncio import (
 from sqlalchemy.pool import NullPool
 from typing import AsyncGenerator
 from config.config import DATABASE_URL
-from models import Base
-
+from src.database.models import Base, Cars
 
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
@@ -22,7 +25,7 @@ async_session_maker: async_sessionmaker[AsyncSession] = async_sessionmaker(
     expire_on_commit=False,
 )
 
-
+@asynccontextmanager
 async def get_db_session() -> AsyncGenerator:
     async with async_session_maker() as session:
         yield session
@@ -32,3 +35,4 @@ async def create_db() -> None:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
+

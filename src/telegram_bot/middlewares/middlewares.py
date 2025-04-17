@@ -1,8 +1,6 @@
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject
 from typing import Callable, Dict, Any, Awaitable
-import logging
-
 
 class TestMiddleware(BaseMiddleware):
     async def __call__(self,
