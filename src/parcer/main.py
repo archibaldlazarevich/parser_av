@@ -25,7 +25,7 @@ async def scheduled_job():
 
 async def scheduler_runner():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(scheduled_job, 'interval', minutes=30)
+    scheduler.add_job(scheduled_job, 'interval', minutes=45)
     scheduler.start()
     try:
         await asyncio.Event().wait()

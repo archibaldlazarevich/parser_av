@@ -44,16 +44,16 @@ async def get_all_model_car(message: Message, state: FSMContext):
         await scheduler_start(chat_id=message.from_user.id)
 
 async def send_hourly_message(chat_id):
-    chat_id = chat_id
-    result = await get_update_models()
-    now = datetime.now().strftime("%H:%M:%S")
-    if len(result) != 0:
-        for car in result:
-            await bot.send_message(chat_id, f"Сообщение по расписанию! Время: {now}")
-            await bot.send_message(chat_id, car[0])
+    if 8 <= datetime.now().hour < 23:
+        result = await get_update_models()
+        now = datetime.now().strftime("%H:%M:%S")
+        if len(result) != 0:
+            for car in result:
+                await bot.send_message(chat_id, f"Сообщение по расписанию! Время: {now}")
+                await bot.send_message(chat_id, car[0])
 
 async def scheduler_start(chat_id):
-    scheduler.add_job(send_hourly_message, args=(chat_id, ), trigger='interval', hours=1)
+    scheduler.add_job(send_hourly_message, args=(chat_id, ), trigger='interval', minutes=30)
     scheduler.start()
 
 @router_update.message(Command('cancel'))

@@ -59,7 +59,7 @@ async def get_update_models() -> list:
     :return: list
     """
 
-    star_tdata = datetime.datetime.today() - datetime.timedelta(hours=1)
+    star_tdata = datetime.datetime.today() - datetime.timedelta(minutes=30)
     async with get_db_session() as session:
         data = await session.execute(select(Cars.link).filter(Cars.date_add.between(star_tdata, datetime.datetime.today())))
     return data.all()
