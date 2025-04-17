@@ -74,10 +74,29 @@ kia_sor_url = (
     "&engine_type[0]=1"
 )
 
-hyundai_url = ('https://cars.av.by/filter?brands[0][brand]=433&brands[0]'
-                '[model]=453&brands[0][generation]=973&'
-                'price_usd[min]={min_price}&'
-                'price_usd[max]={max_price}&engine_type[0]=1')
+hyundai_url = (
+    "https://cars.av.by/filter?brands[0][brand]=433&brands[0]"
+    "[model]=453&brands[0][generation]=973&"
+    "price_usd[min]={min_price}&"
+    "price_usd[max]={max_price}&engine_type[0]=1"
+)
+
+toyota_url = (
+    "https://cars.av.by/filter?brands[0]"
+    "[brand]=1181&brands[0][model]=1209&"
+    "brands[0][generation]=2462&price_usd[min]={min_price}"
+    "&price_usd[max]={max_price}"
+    "&transmission_type[0]=1&transmission_type[1]=3"
+    "&transmission_type[2]=4&engine_type[0]=1"
+)
+
+honda_url = (
+    "https://cars.av.by/filter?brands[0]"
+    "[brand]=383&brands[0][model]=393&brands[0]"
+    "[generation]=816&pprice_usd[min]={min_price}&price_usd[max]={max_price}&"
+    "transmission_type[0]=1&transmission_type[1]=3&"
+    "transmission_type[2]=4&engine_type[0]=1"
+)
 
 urls_list = [
     audi_url,
@@ -89,19 +108,24 @@ urls_list = [
     kia_sor_url,
     kia_sport_url,
     hyundai_url,
+    toyota_url,
+    honda_url,
 ]
 
 model_dict = {
-    2093: 'Audi_q5',
-    964: 'Nissan_x_trail',
-    875: 'Mitsubishi_outlander',
-    1596: 'Chevrolet_equinox',
-    2098: 'Volvo_cx60',
-    2397: 'Mazda_cx5',
-    569: 'Kia_spotage',
-    567: 'Kia_sorento',
-    453: 'Hyundai_santa_fe',
+    2093: "Audi_q5",
+    964: "Nissan_x_trail",
+    875: "Mitsubishi_outlander",
+    1596: "Chevrolet_equinox",
+    2098: "Volvo_cx60",
+    2397: "Mazda_cx5",
+    569: "Kia_spotage",
+    567: "Kia_sorento",
+    453: "Hyundai_santa_fe",
+    1209: "Toyota_Rav4",
+    393: "Honda_CRV",
 }
+
 
 async def parser_av_by(
     session: aiohttp.ClientSession, url: str, min_price: int, max_price: int
@@ -123,31 +147,39 @@ async def parser_av_by(
         for i in a:
             price_usd = i.get("price").get("usd").get("amount")
             price_byn = i.get("price").get("byn").get("amount")
-            date_pub = i.get("publishedAt")
+            date_pub = datetime.strptime(
+                i.get("publishedAt"), "%Y-%m-%dT%H:%M:%S+0000"
+            )
             link = i.get("publicUrl")
-            name =model_dict[i.get('metadata').get('modelId')]
-            for prop in i.get('properties'):
-                if prop['name'] == 'mileage_km':
-                    odometer = prop.get('value')
+            name = model_dict[i.get("metadata").get("modelId")]
+            for prop in i.get("properties"):
+                if prop["name"] == "mileage_km":
+                    odometer = prop.get("value")
 
             async with get_db_session() as session:
-                data: Result[tuple[Cars]] = await session.execute(select(Cars).where(Cars.link == link))
+                data: Result[tuple[Cars]] = await session.execute(
+                    select(Cars).where(Cars.link == link)
+                )
                 date_result = data.scalar()
                 if date_result is not None:
                     if date_result.price_blr != price_byn:
-                        await session.execute(update(Cars).
-                                              where(Cars.id == date_result.id).
-                                              values(price_blr=price_byn, price_usd=price_usd))
+                        await session.execute(
+                            update(Cars)
+                            .where(Cars.id == date_result.id)
+                            .values(
+                                price_blr=price_byn,
+                                price_usd=price_usd,
+                                date_add=datetime.today(),
+                            )
+                        )
                         await session.commit()
                 else:
                     await session.execute(
-                        insert(
-                            Cars
-                        ).values(
+                        insert(Cars).values(
                             name=name,
-                            site='av.by',
+                            site="av.by",
                             link=link,
-                            date_pub=datetime.today(),
+                            date_pub=date_pub,
                             price_usd=price_usd,
                             price_blr=price_byn,
                             odometer=odometer,
@@ -156,11 +188,10 @@ async def parser_av_by(
                     await session.commit()
 
 
-
 async def main(min_price, max_price):
     async with aiohttp.ClientSession(
-            timeout=aiohttp.ClientTimeout(80),
-            connector=aiohttp.TCPConnector(limit=2),
+        timeout=aiohttp.ClientTimeout(80),
+        connector=aiohttp.TCPConnector(limit=2),
     ) as session:
         task = [
             parser_av_by(
@@ -174,5 +205,5 @@ async def main(min_price, max_price):
         return await asyncio.gather(*task)
 
 
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))
+if __name__ == "__main__":
+    asyncio.run(main(min_price=12000, max_price=17000))

@@ -4,11 +4,12 @@ from src.database.func import get_car_name
 
 number = ReplyKeyboardMarkup(
     keyboard=[
-        [KeyboardButton(text='Всего авто')],
-        [KeyboardButton(text='Определённая марка')]
+        [KeyboardButton(text="Всего авто")],
+        [KeyboardButton(text="Определённая марка")],
     ],
-    resize_keyboard=True
+    resize_keyboard=True,
 )
+
 
 async def check_number():
     car_name = await get_car_name()

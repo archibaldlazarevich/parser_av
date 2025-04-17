@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import select, func
 
 from src.database.create_db import get_db_session
@@ -14,6 +16,7 @@ async def get_car_name() -> list:
         car_name = [i[0] for i in result.all()]
     return car_name
 
+
 async def get_all_cars() -> int:
     """
     Метод возвращает общее число автомобилей в бд
@@ -23,6 +26,7 @@ async def get_all_cars() -> int:
         data = await session.execute(select(func.count(Cars.id)))
     return data.scalar()
 
+
 async def get_spec_cars_number(car_name: str) -> int:
     """
     Метод, возвращающий число автомобилей искомой марки в бд
@@ -31,8 +35,11 @@ async def get_spec_cars_number(car_name: str) -> int:
     """
 
     async with get_db_session() as session:
-        data = await session.execute(select(func.count(Cars.id)).where(Cars.name == car_name))
+        data = await session.execute(
+            select(func.count(Cars.id)).where(Cars.name == car_name)
+        )
     return data.scalar()
+
 
 async def get_all_spec_models(model: str) -> list:
     """
@@ -41,5 +48,18 @@ async def get_all_spec_models(model: str) -> list:
     :return: str
     """
     async with get_db_session() as session:
-        data = await session.execute(select(Cars.link).where(Cars.name == model))
+        data = await session.execute(
+            select(Cars.link).where(Cars.name == model)
+        )
+    return data.all()
+
+async def get_update_models() -> list:
+    """
+    Метод, возвращающий список новых авто в зависимости от даты авторизации пользователя
+    :return: list
+    """
+
+    star_tdata = datetime.datetime.today() - datetime.timedelta(hours=1)
+    async with get_db_session() as session:
+        data = await session.execute(select(Cars.link).filter(Cars.date_add.between(star_tdata, datetime.datetime.today())))
     return data.all()
