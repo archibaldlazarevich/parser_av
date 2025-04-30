@@ -42,10 +42,11 @@ mits_url = (
     "&transmission_type[2]=4&engine_type[0]=1"
 )
 chevr_url = (
-    "https://cars.av.by/filter?brands[0][brand]=41&brands[0]"
-    "[model]=1596&brands[0][generation]=3266&price_usd[min]={min_price}"
-    "&price_usd[max]={max_price}&transmission_type[0]=1"
-    "&transmission_type[1]=3&transmission_type[2]=4&engine_type[0]=1"
+    'https://cars.av.by/filter?brands[0][brand]=41&brands[0]'
+    '[model]=1596&brands[0][generation]=3266&'
+    'price_usd[min]={min_price}&price_usd[max]={max_price}&'
+    'transmission_type[0]=1&transmission_type[1]=3&'
+    'transmission_type[2]=4&engine_type[0]=1&place_region[0]=1005'
 )
 volvo_url = (
     "https://cars.av.by/filter?brands[0][brand]=1238&brands[0]"
@@ -93,8 +94,16 @@ toyota_url = (
 honda_url = (
     "https://cars.av.by/filter?brands[0]"
     "[brand]=383&brands[0][model]=393&brands[0]"
-    "[generation]=816&pprice_usd[min]={min_price}&price_usd[max]={max_price}&"
+    "[generation]=816&price_usd[min]={min_price}&price_usd[max]={max_price}&"
     "transmission_type[0]=1&transmission_type[1]=3&"
+    "transmission_type[2]=4&engine_type[0]=1"
+)
+
+mercedes_url = (
+    "https://cars.av.by/filter?brands[0]"
+    "[brand]=683&brands[0][model]=789&brands[0]"
+    "[generation]=4661&price_usd[min]={min_price}&price_usd[max]={max_price}"
+    "&engine_capacity[max]=3600&transmission_type[0]=1&transmission_type[1]=3&"
     "transmission_type[2]=4&engine_type[0]=1"
 )
 
@@ -110,6 +119,7 @@ urls_list = [
     hyundai_url,
     toyota_url,
     honda_url,
+    mercedes_url,
 ]
 
 model_dict = {
@@ -124,6 +134,7 @@ model_dict = {
     453: "Hyundai_santa_fe",
     1209: "Toyota_Rav4",
     393: "Honda_CRV",
+    789: "Mercedes_Benz",
 }
 
 
@@ -162,7 +173,7 @@ async def parser_av_by(
                 )
                 date_result = data.scalar()
                 if date_result is not None:
-                    if date_result.price_blr != price_byn:
+                    if date_result.price_usd != price_usd:
                         await session.execute(
                             update(Cars)
                             .where(Cars.id == date_result.id)
@@ -190,8 +201,8 @@ async def parser_av_by(
 
 async def main(min_price, max_price):
     async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(80),
-        connector=aiohttp.TCPConnector(limit=2),
+        timeout=aiohttp.ClientTimeout(60),
+        connector=aiohttp.TCPConnector(limit=10),
     ) as session:
         task = [
             parser_av_by(
@@ -205,5 +216,5 @@ async def main(min_price, max_price):
         return await asyncio.gather(*task)
 
 
-if __name__ == "__main__":
-    asyncio.run(main(min_price=12000, max_price=17000))
+# if __name__ == "__main__":
+#     asyncio.run(main(min_price=12000, max_price=17000))

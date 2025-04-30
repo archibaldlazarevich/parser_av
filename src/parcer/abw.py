@@ -49,7 +49,7 @@ mits_url_3 = (
 chevr_url = (
     "https://abw.by/cars/brand_chevrolet/model_equinox/"
     "generation_iii/price_{min_price}:{max_price}/engine_benzin/"
-    "transmission_at#classified-listing-adverts"
+    "transmission_at#/region_minskaia-oblast/city_minsk#classified-listing-adverts"
 )
 volvo_url = (
     "https://abw.by/cars/brand_volvo/model_xc60/generation_i/price_{min_price}"
@@ -94,6 +94,13 @@ honda_url = (
     "transmission_at?sort=new#classified-listing-adverts"
 )
 
+mercedes_url = (
+    "https://abw.by/cars/brand_mercedes/"
+    "model_m-klasse/generation_ii-w164-rest/"
+    "price_{min_price}:{max_price}/volume_:4.0/"
+    "engine_benzin/transmission_at#classified-listing-adverts"
+)
+
 urls_list = [
     audi_url,
     nissan_url,
@@ -108,6 +115,7 @@ urls_list = [
     hyundai_url,
     toyota_url,
     honda_url,
+    mercedes_url,
 ]
 
 model_dict = {
@@ -122,6 +130,7 @@ model_dict = {
     "santa-fe": "Hyundai_santa_fe",
     "rav-4": "Toyota_Rav4",
     "cr-v": "Honda_CRV",
+    "m-klasse": "Mercedes_Benz",
 }
 
 
@@ -150,16 +159,19 @@ async def parser_abw_by(
         result = {}
         for i in data_site:
             if i.attrs["class"] == ["top__left"]:
-                data = (
-                    i.find(
-                        "a", {"class": "top__title"}
-                           ).get("href").split("/")
+                data_link = (
+                    i.find("a", {"class": "top__title"}).get("href").split("/")
                 )
-                model = data[4]
+                model = data_link[4]
+                data_gas = i.find("ul", {"class": "top__params"}).text
+                if "бензин" in data_gas:
+                    result[7] = 1
+                else:
+                    result[7] = 0
                 if model in model_dict:
                     name = model_dict[model]
                     result[1] = name
-                    link_ = f"https://abw.by{'/'.join(data)}"
+                    link_ = f"https://abw.by{'/'.join(data_link)}"
                     result[2] = link_
                     odometer = int(
                         "".join(
@@ -186,9 +198,11 @@ async def parser_abw_by(
                         + timedelta(hours=int(date[0]))
                     )
                 elif "назад" not in date_init.lower():
-                    #locale.setlocale(locale.LC_ALL, ("ru_RU", "UTF-8"))
-                    #date_pub = datetime.strptime(date_init.lower(), "%d %B %Y")
-                    date_pub = dateparser.parse(date_init.lower(), languages=['ru'])
+                    # locale.setlocale(locale.LC_ALL, ("ru_RU", "UTF-8"))
+                    # date_pub = datetime.strptime(date_init.lower(), "%d %B %Y")
+                    date_pub = dateparser.parse(
+                        date_init.lower(), languages=["ru"]
+                    )
                 else:
                     date_pub = datetime.today()
                 result[4] = date_pub
@@ -199,38 +213,41 @@ async def parser_abw_by(
                 price_usd = int("".join(i.contents[1].split()[:2]))
                 result[6] = price_usd
 
-            if len(result) == 6:
-                async with get_db_session() as session:
-                    data: Result[tuple[Cars]] = await session.execute(
-                        select(Cars).where(Cars.link == result[2])
-                    )
-                    date_result = data.scalar()
-                    if date_result is not None:
-                        if date_result.price_blr != result[5]:
+            if len(result) == 7:
+                if result[7] == 1:
+                    async with get_db_session() as session:
+                        data: Result[tuple[Cars]] = await session.execute(
+                            select(Cars).where(Cars.link == result[2])
+                        )
+                        date_result = data.scalar()
+                        if date_result is not None:
+                            if date_result.price_usd != result[6]:
+                                await session.execute(
+                                    update(Cars)
+                                    .where(Cars.id == date_result.id)
+                                    .values(
+                                        price_blr=result[5],
+                                        price_usd=result[6],
+                                        date_add=datetime.today(),
+                                    )
+                                )
+                                await session.commit()
+                        else:
                             await session.execute(
-                                update(Cars)
-                                .where(Cars.id == date_result.id)
-                                .values(
-                                    price_blr=result[5],
+                                insert(Cars).values(
+                                    name=result[1],
+                                    site="abw.by",
+                                    link=result[2],
+                                    date_pub=result[4],
                                     price_usd=result[6],
-                                    date_add=datetime.today(),
+                                    price_blr=result[5],
+                                    odometer=result[3],
                                 )
                             )
                             await session.commit()
-                    else:
-                        await session.execute(
-                            insert(Cars).values(
-                                name=result[1],
-                                site="abw.by",
-                                link=result[2],
-                                date_pub=result[4],
-                                price_usd=result[6],
-                                price_blr=result[5],
-                                odometer=result[3],
-                            )
-                        )
-                        await session.commit()
-                result.clear()
+                    result.clear()
+                else:
+                    result.clear()
 
 
 async def main(min_price, max_price):
@@ -250,5 +267,5 @@ async def main(min_price, max_price):
         return await asyncio.gather(*task)
 
 
-if __name__ == "__main__":
-    asyncio.run(main(min_price=12000, max_price=17000))
+# if __name__ == "__main__":
+#     asyncio.run(main(min_price=12000, max_price=17000))

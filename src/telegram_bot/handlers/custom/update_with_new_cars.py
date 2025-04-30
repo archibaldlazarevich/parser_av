@@ -20,11 +20,13 @@ from src.database.models import Users
 class UpdateCars(StatesGroup):
     init_model = State()
 
+
 bot = Bot(token=BOT_TOKEN)
 
 router_update = Router()
 
 scheduler = AsyncIOScheduler()
+
 
 @router_update.message(Command("update"))
 async def get_all_model_car(message: Message, state: FSMContext):
@@ -38,33 +40,44 @@ async def get_all_model_car(message: Message, state: FSMContext):
             f"Новые объявления и обновленные старые объявления будут присылаться по мере поступления",
         )
         async with get_db_session() as session:
-            await session.execute(insert(Users).values(chat_id = message.from_user.id, date=datetime.today()))
+            await session.execute(
+                insert(Users).values(
+                    chat_id=message.from_user.id, date=datetime.today()
+                )
+            )
             await session.commit()
 
         await scheduler_start(chat_id=message.from_user.id)
 
+
 async def send_hourly_message(chat_id):
     if 8 <= datetime.now().hour < 23:
         result = await get_update_models()
-        now = datetime.now().strftime("%H:%M:%S")
         if len(result) != 0:
             for car in result:
-                await bot.send_message(chat_id, f"Сообщение по расписанию! Время: {now}")
                 await bot.send_message(chat_id, car[0])
 
+
 async def scheduler_start(chat_id):
-    scheduler.add_job(send_hourly_message, args=(chat_id, ), trigger='interval', minutes=45)
+    scheduler.add_job(
+        send_hourly_message, args=(chat_id,), trigger="interval", minutes=45
+    )
     scheduler.start()
 
-@router_update.message(Command('cancel'))
+
+@router_update.message(Command("cancel"))
 async def cancel_get_all_model_car(message: Message):
     if scheduler.state:
         async with get_db_session() as session:
-            await session.execute(delete(Users).where(Users.chat_id==message.from_user.id))
+            await session.execute(
+                delete(Users).where(Users.chat_id == message.from_user.id)
+            )
             await session.commit()
             await message.reply(
                 "Поступление новых данных остановлено. \nДля возобновления введите команду: \n/update",
             )
             scheduler.shutdown()
     else:
-        await message.reply('Вы не включили функцию доставки новых и обновленных старых объявлений')
+        await message.reply(
+            "Вы не включили функцию доставки новых и обновленных старых объявлений"
+        )
