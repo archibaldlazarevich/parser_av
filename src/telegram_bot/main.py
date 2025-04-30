@@ -17,12 +17,13 @@ from src.telegram_bot.handlers.custom.get_all_cars_by_model import (
 )
 
 from config.config import BOT_TOKEN
+
 # session = AiohttpSession(proxy= 'http://proxy.server:3128')
 
 bot = Bot(
     token=BOT_TOKEN,
     # session=session,
-    )
+)
 dp = Dispatcher()
 
 

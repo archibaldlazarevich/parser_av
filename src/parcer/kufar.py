@@ -33,7 +33,7 @@ mits_url = (
     "%2C{max_price}&rgd=r%3A2012%2C2022"
 )
 chevr_url = (
-    "https://auto.kufar.by/l/cars/chevrolet-equinox-iii?"
+    "https://auto.kufar.by/l/r~minsk/cars/chevrolet-equinox-iii?"
     "cre=v.or%3A1&crg=1&cur=USD&prc=r%3A{min_price}%2C{max_price}"
 )
 volvo_url = (
@@ -69,6 +69,11 @@ honda_url = (
     "?cre=v.or%3A1&crg=1&cur=USD&prc=r%3A{min_price}%2C{max_price}"
 )
 
+mercedes_url = (
+    "https://auto.kufar.by/l/cars/mercedes-benz-m-klass-ii-w164-restajling"
+    "?crca=r%3A1%2C211&cre=v.or%3A1&crg=1&cur=USD&prc=r%3A{min_price}%2C{max_price}"
+)
+
 urls_list = {
     audi_url: 1,
     nissan_url: 2,
@@ -81,6 +86,7 @@ urls_list = {
     hyundai_url: 9,
     toyota_url: 10,
     honda_url: 11,
+    mercedes_url: 12,
 }
 
 model_dict = {
@@ -95,6 +101,7 @@ model_dict = {
     9: "Hyundai_santa_fe",
     10: "Toyota_Rav4",
     11: "Honda_CRV",
+    12: "Mercedes_Benz",
 }
 
 
@@ -135,7 +142,7 @@ async def parser_kufar_by(
                 )
                 date_result = data.scalar()
                 if date_result is not None:
-                    if date_result.price_blr != price_byn:
+                    if date_result.price_usd != price_usd:
                         await session.execute(
                             update(Cars)
                             .where(Cars.id == date_result.id)
@@ -178,6 +185,6 @@ async def main(min_price, max_price):
         ]
         return await asyncio.gather(*task)
 
-
-if __name__ == "__main__":
-    asyncio.run(main(min_price=12000, max_price=17000))
+#
+# if __name__ == "__main__":
+#     asyncio.run(main(min_price=12000, max_price=17000))

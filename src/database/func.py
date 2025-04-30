@@ -53,13 +53,18 @@ async def get_all_spec_models(model: str) -> list:
         )
     return data.all()
 
+
 async def get_update_models() -> list:
     """
     Метод, возвращающий список новых авто в зависимости от даты авторизации пользователя
     :return: list
     """
 
-    star_tdata = datetime.datetime.today() - datetime.timedelta(minutes=60)
+    star_tdata = datetime.datetime.today() - datetime.timedelta(minutes=45)
     async with get_db_session() as session:
-        data = await session.execute(select(Cars.link).filter(Cars.date_add.between(star_tdata, datetime.datetime.today())))
+        data = await session.execute(
+            select(Cars.link).filter(
+                Cars.date_add.between(star_tdata, datetime.datetime.today())
+            )
+        )
     return data.all()
