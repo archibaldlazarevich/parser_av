@@ -53,7 +53,7 @@ async def send_hourly_message(chat_id):
                 await bot.send_message(chat_id, car[0])
 
 async def scheduler_start(chat_id):
-    scheduler.add_job(send_hourly_message, args=(chat_id, ), trigger='interval', minutes=30)
+    scheduler.add_job(send_hourly_message, args=(chat_id, ), trigger='interval', minutes=45)
     scheduler.start()
 
 @router_update.message(Command('cancel'))

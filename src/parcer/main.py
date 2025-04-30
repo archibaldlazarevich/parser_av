@@ -18,7 +18,7 @@ async def main():
 
 
 async def scheduled_job():
-    if 8 <= (datetime.now() + timedelta(hours=3)).hour < 23:
+    if 8 <= datetime.now().hour < 23:
         await main()
     else:
         print("Вне рабочего времени, пропуск запуска")

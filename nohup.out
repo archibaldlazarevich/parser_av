@@ -1,0 +1,93 @@
+2025-04-20 20:13:58,968 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2025-04-20 20:13:58,969 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("cars")
+2025-04-20 20:13:58,969 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:58,969 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-04-20 20:13:58,969 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:58,970 INFO sqlalchemy.engine.Engine 
+DROP TABLE users
+2025-04-20 20:13:58,970 INFO sqlalchemy.engine.Engine [no key 0.00008s] ()
+2025-04-20 20:13:59,013 INFO sqlalchemy.engine.Engine 
+DROP TABLE cars
+2025-04-20 20:13:59,014 INFO sqlalchemy.engine.Engine [no key 0.00012s] ()
+2025-04-20 20:13:59,053 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("cars")
+2025-04-20 20:13:59,053 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("cars")
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine PRAGMA main.table_info("users")
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine PRAGMA temp.table_info("users")
+2025-04-20 20:13:59,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2025-04-20 20:13:59,055 INFO sqlalchemy.engine.Engine 
+CREATE TABLE cars (
+	id INTEGER NOT NULL, 
+	name VARCHAR(50) NOT NULL, 
+	site VARCHAR(20) NOT NULL, 
+	link VARCHAR NOT NULL, 
+	date_pub DATETIME NOT NULL, 
+	date_add DATETIME NOT NULL, 
+	price_usd INTEGER NOT NULL, 
+	price_blr INTEGER NOT NULL, 
+	odometer INTEGER NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (link)
+)
+
+
+2025-04-20 20:13:59,055 INFO sqlalchemy.engine.Engine [no key 0.00008s] ()
+2025-04-20 20:13:59,099 INFO sqlalchemy.engine.Engine 
+CREATE TABLE users (
+	id INTEGER NOT NULL, 
+	chat_id INTEGER NOT NULL, 
+	date DATE NOT NULL, 
+	PRIMARY KEY (id), 
+	UNIQUE (chat_id)
+)
+
+
+2025-04-20 20:13:59,100 INFO sqlalchemy.engine.Engine [no key 0.00008s] ()
+2025-04-20 20:13:59,144 INFO sqlalchemy.engine.Engine COMMIT
+INFO:aiogram.dispatcher:Start polling
+INFO:aiogram.dispatcher:Run polling for bot @Familynewcarbot id=7806110277 - 'Familynewcar'
+INFO:aiogram.event:Update id=426656222 is handled. Duration 203 ms by bot id=7806110277
+WARNING:aiogram.dispatcher:Received SIGINT signal
+INFO:aiogram.dispatcher:Polling stopped for bot @Familynewcarbot id=7806110277 - 'Familynewcar'
+INFO:aiogram.dispatcher:Polling stopped
+Traceback (most recent call last):
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/asyncio/runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/asyncio/base_events.py", line 720, in run_until_complete
+    return future.result()
+           ~~~~~~~~~~~~~^^
+  File "/home/a1119313/projects/parser_av/src/parcer/main.py", line 31, in scheduler_runner
+    await asyncio.Event().wait()
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/asyncio/locks.py", line 213, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/a1119313/projects/parser_av/src/parcer/main.py", line 36, in <module>
+    asyncio.run(scheduler_runner())
+    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/asyncio/runners.py", line 194, in run
+    return runner.run(main)
+           ~~~~~~~~~~^^^^^^
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/asyncio/runners.py", line 123, in run
+    raise KeyboardInterrupt()
+KeyboardInterrupt
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/home/a1119313/projects/parser_av/src/main.py", line 26, in <module>
+    thread1.join()
+    ~~~~~~~~~~~~^^
+  File "/opt/rh/rh-python313/root/usr/lib64/python3.13/threading.py", line 1092, in join
+    self._handle.join(timeout)
+    ~~~~~~~~~~~~~~~~~^^^^^^^^^
+KeyboardInterrupt
+Действие для обработчика
+Действия после обработчика

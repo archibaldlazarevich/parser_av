@@ -1,5 +1,5 @@
 import locale
-
+import dateparser
 import aiohttp
 import bs4
 import asyncio
@@ -186,8 +186,9 @@ async def parser_abw_by(
                         + timedelta(hours=int(date[0]))
                     )
                 elif "назад" not in date_init.lower():
-                    locale.setlocale(locale.LC_ALL, ("ru_RU", "UTF-8"))
-                    date_pub = datetime.strptime(date_init, "%d %B %Y")
+                    #locale.setlocale(locale.LC_ALL, ("ru_RU", "UTF-8"))
+                    #date_pub = datetime.strptime(date_init.lower(), "%d %B %Y")
+                    date_pub = dateparser.parse(date_init.lower(), languages=['ru'])
                 else:
                     date_pub = datetime.today()
                 result[4] = date_pub
