@@ -11,22 +11,22 @@ import asyncio
 
 async def main():
     task = [
-        # abw.main(min_price=12000, max_price=17500),
+        abw.main(min_price=12000, max_price=17500),
         av.main(min_price=12000, max_price=17500),
-        # kufar.main(min_price=12000, max_price=17500),
-        # delete_av.main(),
+        kufar.main(min_price=12000, max_price=17500),
+        delete_av.main(),
     ]
     await asyncio.gather(*task)
 
 
 async def scheduled_job():
-    # if 8 <= datetime.now().hour < 23:
-    await main()
+    if 8 <= datetime.now().hour < 23:
+        await main()
 
 
 async def scheduler_runner():
     scheduler = AsyncIOScheduler()
-    scheduler.add_job(scheduled_job, "interval", minutes=1)
+    scheduler.add_job(scheduled_job, "interval", minutes=45)
     scheduler.start()
     try:
         await asyncio.Event().wait()
