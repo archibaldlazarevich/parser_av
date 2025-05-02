@@ -226,5 +226,5 @@ async def main(min_price, max_price):
         return await asyncio.gather(*task)
 
 
-if __name__ == "__main__":
-    asyncio.run(main(min_price=12000, max_price=17000))
+# if __name__ == "__main__":
+#     asyncio.run(main(min_price=12000, max_price=17000))
