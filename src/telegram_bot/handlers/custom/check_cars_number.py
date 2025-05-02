@@ -6,8 +6,6 @@ from aiogram.fsm.context import FSMContext
 import src.telegram_bot.keyboards.reply as reply
 from src.database.func import get_all_cars, get_spec_cars_number
 
-import datetime
-
 
 class Number(StatesGroup):
     init_number = State()
@@ -21,7 +19,7 @@ router_cars_number = Router()
 async def init_message(message: Message, state: FSMContext):
     await state.set_state(Number.init_number)
     await message.reply(
-        "Выберите необходимы пункт меню", reply_markup=reply.number
+        "Выберите необходимый пункт меню", reply_markup=reply.number
     )
 
 
