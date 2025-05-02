@@ -15,6 +15,9 @@ from src.telegram_bot.handlers.custom.check_cars_number import (
 from src.telegram_bot.handlers.custom.get_all_cars_by_model import (
     router_cars_model,
 )
+from src.telegram_bot.handlers.custom.check_average import (
+    router_cars_counter,
+)
 
 from config.config import BOT_TOKEN
 
@@ -46,6 +49,10 @@ async def set_commands():
             command="cancel",
             description="Остановить получение новых сообщений",
         ),
+        BotCommand(
+            command="average",
+            description="Средние значения по показателям",
+        ),
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
@@ -61,6 +68,7 @@ async def main():
         router_cars_number,
         router_cars_model,
         router_update,
+        router_cars_counter,
     )
     dp.startup.register(start_bot)
     try:

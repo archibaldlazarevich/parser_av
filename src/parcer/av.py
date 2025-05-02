@@ -42,11 +42,11 @@ mits_url = (
     "&transmission_type[2]=4&engine_type[0]=1"
 )
 chevr_url = (
-    'https://cars.av.by/filter?brands[0][brand]=41&brands[0]'
-    '[model]=1596&brands[0][generation]=3266&'
-    'price_usd[min]={min_price}&price_usd[max]={max_price}&'
-    'transmission_type[0]=1&transmission_type[1]=3&'
-    'transmission_type[2]=4&engine_type[0]=1&place_region[0]=1005'
+    "https://cars.av.by/filter?brands[0][brand]=41&brands[0]"
+    "[model]=1596&brands[0][generation]=3266&"
+    "price_usd[min]={min_price}&price_usd[max]={max_price}&"
+    "transmission_type[0]=1&transmission_type[1]=3&"
+    "transmission_type[2]=4&engine_type[0]=1&place_region[0]=1005"
 )
 volvo_url = (
     "https://cars.av.by/filter?brands[0][brand]=1238&brands[0]"
@@ -122,6 +122,12 @@ urls_list = [
     mercedes_url,
 ]
 
+all_urls = []
+
+for number in range(1, 11):
+    urls = [url + f"&page={number}" for url in urls_list]
+    all_urls.extend(urls)
+
 model_dict = {
     2093: "Audi_q5",
     964: "Nissan_x_trail",
@@ -141,8 +147,10 @@ model_dict = {
 async def parser_av_by(
     session: aiohttp.ClientSession, url: str, min_price: int, max_price: int
 ):
+
     async with session.get(
-        url.format(min_price=min_price, max_price=max_price), headers=header
+        url.format(min_price=min_price, max_price=max_price, page=number),
+        headers=header,
     ) as resp:
         soup = bs4.BeautifulSoup(await resp.text(), "lxml")
         data = soup.find("script", {"id": "__NEXT_DATA__"})
@@ -154,55 +162,57 @@ async def parser_av_by(
             .get("main")
             .get("adverts")
         )
-
-        for i in a:
-            price_usd = i.get("price").get("usd").get("amount")
-            price_byn = i.get("price").get("byn").get("amount")
-            date_pub = datetime.strptime(
-                i.get("publishedAt"), "%Y-%m-%dT%H:%M:%S+0000"
-            )
-            link = i.get("publicUrl")
-            name = model_dict[i.get("metadata").get("modelId")]
-            for prop in i.get("properties"):
-                if prop["name"] == "mileage_km":
-                    odometer = prop.get("value")
-
-            async with get_db_session() as session:
-                data: Result[tuple[Cars]] = await session.execute(
-                    select(Cars).where(Cars.link == link)
+        if not a is None:
+            for i in a:
+                price_usd = i.get("price").get("usd").get("amount")
+                price_byn = i.get("price").get("byn").get("amount")
+                date_pub = datetime.strptime(
+                    i.get("publishedAt"), "%Y-%m-%dT%H:%M:%S+0000"
                 )
-                date_result = data.scalar()
-                if date_result is not None:
-                    if date_result.price_usd != price_usd:
+                link = i.get("publicUrl")
+                year = i.get("year")
+                name = model_dict[i.get("metadata").get("modelId")]
+                for prop in i.get("properties"):
+                    if prop["name"] == "mileage_km":
+                        odometer = prop.get("value")
+
+                async with get_db_session() as session:
+                    data: Result[tuple[Cars]] = await session.execute(
+                        select(Cars).where(Cars.link == link)
+                    )
+                    date_result = data.scalar()
+                    if date_result is not None:
+                        if date_result.price_usd != price_usd:
+                            await session.execute(
+                                update(Cars)
+                                .where(Cars.id == date_result.id)
+                                .values(
+                                    price_blr=price_byn,
+                                    price_usd=price_usd,
+                                    date_add=datetime.today(),
+                                )
+                            )
+                            await session.commit()
+                    else:
                         await session.execute(
-                            update(Cars)
-                            .where(Cars.id == date_result.id)
-                            .values(
-                                price_blr=price_byn,
+                            insert(Cars).values(
+                                name=name,
+                                site="av.by",
+                                link=link,
+                                date_pub=date_pub,
                                 price_usd=price_usd,
-                                date_add=datetime.today(),
+                                price_blr=price_byn,
+                                odometer=odometer,
+                                year=year,
                             )
                         )
                         await session.commit()
-                else:
-                    await session.execute(
-                        insert(Cars).values(
-                            name=name,
-                            site="av.by",
-                            link=link,
-                            date_pub=date_pub,
-                            price_usd=price_usd,
-                            price_blr=price_byn,
-                            odometer=odometer,
-                        )
-                    )
-                    await session.commit()
 
 
 async def main(min_price, max_price):
     async with aiohttp.ClientSession(
-        timeout=aiohttp.ClientTimeout(60),
-        connector=aiohttp.TCPConnector(limit=10),
+        timeout=aiohttp.ClientTimeout(80),
+        connector=aiohttp.TCPConnector(limit=2),
     ) as session:
         task = [
             parser_av_by(
@@ -211,10 +221,10 @@ async def main(min_price, max_price):
                 min_price=min_price,
                 max_price=max_price,
             )
-            for url in urls_list
+            for url in all_urls
         ]
         return await asyncio.gather(*task)
 
 
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))
+if __name__ == "__main__":
+    asyncio.run(main(min_price=12000, max_price=17000))

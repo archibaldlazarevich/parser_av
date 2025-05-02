@@ -25,6 +25,7 @@ class Cars(Base):
     price_usd: Mapped[int] = mapped_column(Integer, nullable=False)
     price_blr: Mapped[int] = mapped_column(Integer, nullable=False)
     odometer: Mapped[int] = mapped_column(Integer, nullable=False)
+    year: Mapped[int] = mapped_column(Integer, nullable=False)
 
     def __repr__(self) -> str:
         return (

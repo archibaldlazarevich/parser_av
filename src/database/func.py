@@ -1,6 +1,6 @@
 import datetime
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 
 from src.database.create_db import get_db_session
 from src.database.models import Cars
@@ -68,3 +68,68 @@ async def get_update_models() -> list:
             )
         )
     return data.all()
+
+
+async def get_aver_year(car_name: str) -> int:
+    """
+    Метод, возвращаюший средний год выпуска авто из бд по названию
+    :param car_name: название автомобиля
+    :return:
+    """
+    async with get_db_session() as session:
+        data = await session.execute(
+            select(func.round(func.avg(Cars.year))).where(
+                Cars.name == car_name
+            )
+        )
+    return int(data.scalar())
+
+
+async def get_aver_cost(car_name: str) -> int:
+    """
+    Метод, возвращающий среднюю стоимость авто
+    :param car_name: название автомобиля
+    :return:
+    """
+    async with get_db_session() as session:
+        data = await session.execute(
+            select(func.round(func.avg(Cars.price_usd))).where(
+                Cars.name == car_name
+            )
+        )
+    return int(data.scalar())
+
+
+async def get_car_year(car_name: str) -> list:
+    """
+    Мето, возвращающий список годов выпуска авто
+    :param car_name:
+    :return:
+    """
+
+    async with get_db_session() as session:
+        data = await session.execute(
+            select(Cars.year)
+            .where(Cars.name == car_name)
+            .distinct()
+            .order_by(Cars.year)
+        )
+        car_year = [i[0] for i in data.all()]
+    return car_year
+
+
+async def get_aver_cost_by_year(car_name: str, year: int) -> int:
+    """
+    Метод, возвращающий среднюю цену на авто по году выпуска
+    :param car_name:
+    :param year:
+    :return:
+    """
+
+    async with get_db_session() as session:
+        data = await session.execute(
+            select(func.round(func.avg(Cars.price_usd))).filter(
+                and_(Cars.name == car_name, Cars.year == year)
+            )
+        )
+    return int(data.scalar())

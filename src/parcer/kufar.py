@@ -125,9 +125,12 @@ async def parser_kufar_by(
             .get("ads")
         )
         for i in a:
+            # print(i)
             for data in i.get("ad_parameters"):
                 if data["p"] == "mileage":
                     odometer = int(data["v"])
+                if data["p"] == "regdate":
+                    year = int(data["v"])
             name = name
             link = i.get("ad_link")
             price_usd = int(i.get("price_usd")[:-2])
@@ -163,6 +166,7 @@ async def parser_kufar_by(
                             price_usd=price_usd,
                             price_blr=price_byn,
                             odometer=odometer,
+                            year=year,
                         )
                     )
                     await session.commit()
@@ -185,6 +189,6 @@ async def main(min_price, max_price):
         ]
         return await asyncio.gather(*task)
 
-#
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))
+
+if __name__ == "__main__":
+    asyncio.run(main(min_price=12000, max_price=17000))

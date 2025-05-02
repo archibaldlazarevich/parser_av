@@ -159,9 +159,9 @@ async def parser_abw_by(
         result = {}
         for i in data_site:
             if i.attrs["class"] == ["top__left"]:
-                data_link = (
-                    i.find("a", {"class": "top__title"}).get("href").split("/")
-                )
+                data_car = i.find("a", {"class": "top__title"})
+                data_link = data_car.get("href").split("/")
+                result[8] = int(data_car.text.split()[-1])
                 model = data_link[4]
                 data_gas = i.find("ul", {"class": "top__params"}).text
                 if "бензин" in data_gas:
@@ -213,7 +213,7 @@ async def parser_abw_by(
                 price_usd = int("".join(i.contents[1].split()[:2]))
                 result[6] = price_usd
 
-            if len(result) == 7:
+            if len(result) == 8:
                 if result[7] == 1:
                     async with get_db_session() as session:
                         data: Result[tuple[Cars]] = await session.execute(
@@ -242,6 +242,7 @@ async def parser_abw_by(
                                     price_usd=result[6],
                                     price_blr=result[5],
                                     odometer=result[3],
+                                    year=result[8],
                                 )
                             )
                             await session.commit()
@@ -267,5 +268,5 @@ async def main(min_price, max_price):
         return await asyncio.gather(*task)
 
 
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))
+if __name__ == "__main__":
+    asyncio.run(main(min_price=12000, max_price=17000))
