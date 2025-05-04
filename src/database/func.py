@@ -3,7 +3,7 @@ import datetime
 from sqlalchemy import select, func, and_
 
 from src.database.create_db import get_db_session
-from src.database.models import Cars
+from src.database.models import Cars, Users
 
 
 async def get_car_name() -> list:
@@ -133,3 +133,16 @@ async def get_aver_cost_by_year(car_name: str, year: int) -> int:
             )
         )
     return int(data.scalar())
+
+
+async def get_users_id() -> list | None:
+    """
+    Метод возвращаюший список id пользоваителей подписанных на обновления
+    :return:
+    """
+    async with get_db_session() as session:
+        data = await session.execute(
+            select(Users.chat_id)
+        )
+        data_all = data.all()
+    return data_all
