@@ -16,13 +16,18 @@ if __name__ == "__main__":
     thread3 = threading.Thread(
         target=run_script, args=(("src.telegram_bot.main"),)
     )
+    thread4 = threading.Thread(
+        target=run_script, args=(("src.telegram_bot.handlers.custom.update_chat"),)
+    )
 
     # Запускаем потоки
     thread1.start()
     thread2.start()
     thread3.start()
+    thread4.start()
 
     # Ожидаем завершения потоков
     thread1.join()
     thread2.join()
     thread3.join()
+    thread4.join()

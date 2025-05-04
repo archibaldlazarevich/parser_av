@@ -6,13 +6,13 @@ from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import insert, delete, update
+from sqlalchemy import insert, delete, update, select
 from aiogram import Bot
 
 
 from config.config import BOT_TOKEN
 from src.database.create_db import get_db_session
-from src.database.func import get_update_models
+from src.database.func import get_update_models, get_users_id
 
 from src.database.models import Users
 
@@ -21,17 +21,24 @@ class UpdateCars(StatesGroup):
     init_model = State()
 
 
-bot = Bot(token=BOT_TOKEN)
+# bot = Bot(token=BOT_TOKEN)
 
 router_update = Router()
 
-scheduler = AsyncIOScheduler()
+# scheduler = AsyncIOScheduler()
 
 
 @router_update.message(Command("update"))
 async def get_all_model_car(message: Message, state: FSMContext):
     await state.set_state(UpdateCars.init_model)
-    if scheduler.state:
+    async with get_db_session() as session:
+        result = await session.execute(
+            select(Users.chat_id).where(
+                Users.chat_id == message.chat.id,
+            )
+        )
+        result = result.scalar()
+    if result is not None:
         await message.reply(
             f"Процесс просмотра новых объявлений уже запущен, как только появятся обновления, данные отправятся вам",
         )
@@ -42,41 +49,30 @@ async def get_all_model_car(message: Message, state: FSMContext):
         async with get_db_session() as session:
             await session.execute(
                 insert(Users).values(
-                    chat_id=message.from_user.id, date=datetime.today()
+                    chat_id=message.chat.id, date=datetime.today()
                 )
             )
             await session.commit()
 
-        await scheduler_start(chat_id=message.from_user.id)
-
-
-async def send_hourly_message(chat_id):
-    if 8 <= datetime.now().hour < 23:
-        result = await get_update_models()
-        if len(result) != 0:
-            for car in result:
-                await bot.send_message(chat_id, car[0])
-
-
-async def scheduler_start(chat_id):
-    scheduler.add_job(
-        send_hourly_message, args=(chat_id,), trigger="interval", minutes=45
-    )
-    scheduler.start()
-
 
 @router_update.message(Command("cancel"))
 async def cancel_get_all_model_car(message: Message):
-    if scheduler.state:
+    async with get_db_session() as session:
+        result = await session.execute(
+            select(Users.chat_id).where(
+                Users.chat_id == message.chat.id,
+            )
+        )
+        result = result.scalar()
+    if result is not None:
         async with get_db_session() as session:
             await session.execute(
-                delete(Users).where(Users.chat_id == message.from_user.id)
+                delete(Users).where(Users.chat_id == message.chat.id)
             )
             await session.commit()
             await message.reply(
                 "Поступление новых данных остановлено. \nДля возобновления введите команду: \n/update",
             )
-            scheduler.shutdown()
     else:
         await message.reply(
             "Вы не включили функцию доставки новых и обновленных старых объявлений"
