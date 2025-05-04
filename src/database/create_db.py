@@ -15,7 +15,7 @@ from src.database.models import Base, Cars
 
 engine: AsyncEngine = create_async_engine(
     DATABASE_URL,
-    echo=True,
+    # echo=True,
     poolclass=NullPool,
 )
 
