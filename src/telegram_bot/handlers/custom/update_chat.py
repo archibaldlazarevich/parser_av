@@ -19,8 +19,6 @@ async def send_hourly_message(number):
                 if len(result) != 0:
                     for car in result:
                         await bot.send_message(chat_id[0], car[0])
-                else:
-                    await bot.send_message(chat_id[0], 'ghjdthrf')
 
 
 
