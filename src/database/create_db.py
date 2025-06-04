@@ -1,7 +1,8 @@
-import asyncio
+"""
+Создание бд
+"""
 from contextlib import asynccontextmanager
 
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     AsyncEngine,

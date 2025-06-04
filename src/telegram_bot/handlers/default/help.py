@@ -12,7 +12,7 @@ async def get_help(message: Message):
         [f"/{command[0]} - {command[1]}" for command in DEFAULT_COMMANDS]
     )
     await message.answer(
-        "Этот бот - по просмотру новых объявлений автомобилей.\n"
+        "Бот по просмотру новых объявлений автомобилей.\n"
         "Команды, которые выполняет данный бот:\n"
         f"{commands}"
     )

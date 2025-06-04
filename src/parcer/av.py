@@ -19,7 +19,7 @@ user = fake_useragent.UserAgent(
 
 header = {"user-agent": user}
 
-audi_url = (
+audi_url = ( # просто ссылку вставить из настроенного поиска на сайте и заменить цены на price_{min_price}:{max_price}
     "https://cars.av.by/filter?brands[0][brand]=6&brands[0]"
     "[model]=2093&brands[0][generation]="
     "94&price_usd[min]={min_price}"
@@ -129,7 +129,7 @@ for number in range(1, 11):
     all_urls.extend(urls)
 
 model_dict = {
-    2093: "Audi_q5",
+    2093: "Audi_q5", # 2093 - код автомобиля из API AV.by, так же есть в ссылке из поиска авто пример - [model]=2093
     964: "Nissan_x_trail",
     875: "Mitsubishi_outlander",
     1596: "Chevrolet_equinox",
@@ -147,7 +147,14 @@ model_dict = {
 async def parser_av_by(
     session: aiohttp.ClientSession, url: str, min_price: int, max_price: int
 ):
-
+    """
+    Функция парсера av.by
+    :param session:
+    :param url: ссылка для парсинга
+    :param min_price: минимальная цена в usd
+    :param max_price: максимальная цена в usd
+    :return:
+    """
     async with session.get(
         url.format(min_price=min_price, max_price=max_price, page=number),
         headers=header,

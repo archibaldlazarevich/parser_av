@@ -1,18 +1,13 @@
 from datetime import datetime
 
-from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
+from aiogram import Router
+from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from sqlalchemy import insert, delete, update, select
-from aiogram import Bot
+from sqlalchemy import insert, delete, select
 
-
-from config.config import BOT_TOKEN
 from src.database.create_db import get_db_session
-from src.database.func import get_update_models, get_users_id
 
 from src.database.models import Users
 
@@ -20,12 +15,7 @@ from src.database.models import Users
 class UpdateCars(StatesGroup):
     init_model = State()
 
-
-# bot = Bot(token=BOT_TOKEN)
-
 router_update = Router()
-
-# scheduler = AsyncIOScheduler()
 
 
 @router_update.message(Command("update"))
