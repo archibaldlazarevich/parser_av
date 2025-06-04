@@ -1,12 +1,11 @@
-from datetime import datetime
-
+"""
+Удаление моеделей для av бай
+"""
 import aiohttp
-import bs4
 import asyncio
 import fake_useragent
-import json
 
-from sqlalchemy import insert, Result, select, update, delete
+from sqlalchemy import select, delete
 
 from src.database.create_db import get_db_session
 from src.database.models import Cars

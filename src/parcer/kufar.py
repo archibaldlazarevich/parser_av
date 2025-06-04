@@ -1,3 +1,6 @@
+"""
+Парсер kufar.by
+"""
 from datetime import datetime
 
 import aiohttp
@@ -112,6 +115,14 @@ async def parser_kufar_by(
     min_price: int,
     max_price: int,
 ):
+    """
+        Функция парсера kufar.by
+        :param session:
+        :param url: ссылка для парсинга
+        :param min_price: минимальная цена в usd
+        :param max_price: максимальная цена в usd
+        :return:
+        """
     async with session.get(
         url.format(min_price=min_price, max_price=max_price), headers=header
     ) as resp:
@@ -125,7 +136,6 @@ async def parser_kufar_by(
             .get("ads")
         )
         for i in a:
-            # print(i)
             for data in i.get("ad_parameters"):
                 if data["p"] == "mileage":
                     odometer = int(data["v"])

@@ -1,14 +1,13 @@
-import locale
+"""
+Парсер сайта abw
+"""
 import dateparser
 import aiohttp
 import bs4
 import asyncio
 import fake_useragent
-from typing import Annotated
 from datetime import datetime, timedelta
 
-from scrapy.utils.project import data_path
-from sqlalchemy.ext.asyncio import AsyncSession
 from src.database.create_db import get_db_session
 from src.database.models import Cars
 from sqlalchemy import insert, select, Result, update
@@ -21,7 +20,7 @@ user = fake_useragent.UserAgent(
 ).random
 header = {"user-agent": user}
 
-audi_url = (
+audi_url = ( # просто ссылку вставить из настроенного поиска на сайте и заменить цены на price_{min_price}:{max_price}
     "https://abw.by/cars/brand_audi/model_q5/generation_i-8r-rest"
     "/price_{min_price}:{max_price}/engine_benzin/transmission_at"
     "#classified-listing-adverts"
@@ -119,7 +118,7 @@ urls_list = [
 ]
 
 model_dict = {
-    "q5": "Audi_q5",
+    "q5": "Audi_q5", # ключ q5 должен быть как в ссылке пример - /model_q5
     "x-trail": "Nissan_x_trail",
     "outlander": "Mitsubishi_outlander",
     "equinox": "Chevrolet_equinox",
@@ -140,7 +139,14 @@ async def parser_abw_by(
     min_price: int,
     max_price: int,
 ):
-
+    """"
+    Функция парсера abw.by
+    :param session:
+    :param url: ссылка для парсинга
+    :param min_price: минимальная цена в usd
+    :param max_price: максимальная цена в usd
+    :return:
+    """
     async with session.get(
         url.format(min_price=min_price, max_price=max_price), headers=header
     ) as resp:

@@ -13,7 +13,7 @@ scheduler = AsyncIOScheduler()
 
 async def main():
     task = [
-        abw.main(min_price=12000, max_price=17500),
+        abw.main(min_price=12000, max_price=17500),# Вписать необходимые суммы в usd
         av.main(min_price=12000, max_price=17500),
         kufar.main(min_price=12000, max_price=17500),
         delete_av.main(),

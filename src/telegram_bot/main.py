@@ -19,40 +19,18 @@ from src.telegram_bot.handlers.custom.check_average import (
     router_cars_counter,
 )
 
-from config.config import BOT_TOKEN
-
-# session = AiohttpSession(proxy= 'http://proxy.server:3128')
+from config.config import BOT_TOKEN, DEFAULT_COMMANDS
 
 bot = Bot(
     token=BOT_TOKEN,
-    # session=session,
 )
 dp = Dispatcher()
 
 
 async def set_commands():
     commands = [
-        BotCommand(command="start", description="Запустить бота!"),
-        BotCommand(command="help", description="Справка"),
-        BotCommand(
-            command="number", description="Количество автомобилей в базе"
-        ),
-        BotCommand(
-            command="models",
-            description="Список объявлений определенной модели авто",
-        ),
-        BotCommand(
-            command="update",
-            description="Получение новых объявлений",
-        ),
-        BotCommand(
-            command="cancel",
-            description="Остановить получение новых сообщений",
-        ),
-        BotCommand(
-            command="average",
-            description="Средние значения по показателям",
-        ),
+        BotCommand(command=command[0], description=command[1])
+        for command in DEFAULT_COMMANDS
     ]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
