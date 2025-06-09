@@ -1,69 +1,42 @@
-from datetime import datetime
-
 from aiogram import Router
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.filters import Command
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
-from sqlalchemy import insert, delete, select
+from src.database.func import check_update, update_insert, delete_update
 
-from src.database.create_db import get_db_session
-
-from src.database.models import Users
-
-
-class UpdateCars(StatesGroup):
-    init_model = State()
 
 router_update = Router()
 
 
 @router_update.message(Command("update"))
 async def get_all_model_car(message: Message, state: FSMContext):
-    await state.set_state(UpdateCars.init_model)
-    async with get_db_session() as session:
-        result = await session.execute(
-            select(Users.chat_id).where(
-                Users.chat_id == message.chat.id,
-            )
-        )
-        result = result.scalar()
-    if result is not None:
+    await state.clear()
+    result = await check_update(id_ = message.chat.id)
+    if result:
         await message.reply(
             f"Процесс просмотра новых объявлений уже запущен, как только появятся обновления, данные отправятся вам",
+            reply_markup=ReplyKeyboardRemove()
         )
     else:
         await message.reply(
             f"Новые объявления и обновленные старые объявления будут присылаться по мере поступления",
+            reply_markup=ReplyKeyboardRemove()
         )
-        async with get_db_session() as session:
-            await session.execute(
-                insert(Users).values(
-                    chat_id=message.chat.id, date=datetime.today()
-                )
-            )
-            await session.commit()
+        await update_insert(id_ = message.chat.id)
 
 
 @router_update.message(Command("cancel"))
-async def cancel_get_all_model_car(message: Message):
-    async with get_db_session() as session:
-        result = await session.execute(
-            select(Users.chat_id).where(
-                Users.chat_id == message.chat.id,
-            )
+async def cancel_get_all_model_car(message: Message, state: FSMContext):
+    await state.clear()
+    result = await check_update(id_ = message.chat.id)
+    if result:
+        await delete_update(id_ = message.chat.id)
+        await message.reply(
+            "Поступление новых данных остановлено. \nДля возобновления введите команду: \n/update",
+            reply_markup=ReplyKeyboardRemove()
         )
-        result = result.scalar()
-    if result is not None:
-        async with get_db_session() as session:
-            await session.execute(
-                delete(Users).where(Users.chat_id == message.chat.id)
-            )
-            await session.commit()
-            await message.reply(
-                "Поступление новых данных остановлено. \nДля возобновления введите команду: \n/update",
-            )
     else:
         await message.reply(
-            "Вы не включили функцию доставки новых и обновленных старых объявлений"
+            "Вы не включили функцию доставки новых и обновленных старых объявлений",
+            reply_markup=ReplyKeyboardRemove()
         )

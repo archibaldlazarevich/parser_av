@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
@@ -11,14 +11,17 @@ import asyncio
 count = 0
 scheduler = AsyncIOScheduler()
 
+
 async def main():
     task = [
-        abw.main(min_price=12000, max_price=17500),# Вписать необходимые суммы в usd
+        abw.main(min_price=12000, max_price=17500),
         av.main(min_price=12000, max_price=17500),
         kufar.main(min_price=12000, max_price=17500),
         delete_av.main(),
     ]
-    await asyncio.gather(*task)
+    for parser in task:
+        await parser
+        await asyncio.sleep(10)
 
 
 async def scheduled_job():
@@ -27,11 +30,13 @@ async def scheduled_job():
         await main()
         count += 1
     if count == 3:
-        scheduler.modify_job(job_id='parcer', trigger=IntervalTrigger(minutes=45))
+        scheduler.modify_job(
+            job_id="parcer", trigger=IntervalTrigger(minutes=45)
+        )
 
 
 async def scheduler_runner():
-    scheduler.add_job(scheduled_job, "interval", minutes=2, id='parcer')
+    scheduler.add_job(scheduled_job, "interval", minutes=4, id="parcer")
     scheduler.start()
     try:
         await asyncio.Event().wait()

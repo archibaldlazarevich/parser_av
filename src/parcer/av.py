@@ -1,3 +1,7 @@
+"""
+Парсер сайта www.av.by
+"""
+
 from datetime import datetime
 
 import aiohttp
@@ -9,6 +13,7 @@ import json
 from sqlalchemy import insert, Result, select, update
 
 from src.database.create_db import get_db_session
+from src.database.func import parser_av
 from src.database.models import Cars
 
 user = fake_useragent.UserAgent(
@@ -19,7 +24,7 @@ user = fake_useragent.UserAgent(
 
 header = {"user-agent": user}
 
-audi_url = ( # просто ссылку вставить из настроенного поиска на сайте и заменить цены на price_{min_price}:{max_price}
+audi_url = (
     "https://cars.av.by/filter?brands[0][brand]=6&brands[0]"
     "[model]=2093&brands[0][generation]="
     "94&price_usd[min]={min_price}"
@@ -129,7 +134,7 @@ for number in range(1, 11):
     all_urls.extend(urls)
 
 model_dict = {
-    2093: "Audi_q5", # 2093 - код автомобиля из API AV.by, так же есть в ссылке из поиска авто пример - [model]=2093
+    2093: "Audi_q5",  # ключ - код модели авто в тексте ссылки сайта
     964: "Nissan_x_trail",
     875: "Mitsubishi_outlander",
     1596: "Chevrolet_equinox",
@@ -149,7 +154,7 @@ async def parser_av_by(
 ):
     """
     Функция парсера av.by
-    :param session:
+    :param session: сессия подключения к сайту
     :param url: ссылка для парсинга
     :param min_price: минимальная цена в usd
     :param max_price: максимальная цена в usd
@@ -182,41 +187,24 @@ async def parser_av_by(
                 for prop in i.get("properties"):
                     if prop["name"] == "mileage_km":
                         odometer = prop.get("value")
-
-                async with get_db_session() as session:
-                    data: Result[tuple[Cars]] = await session.execute(
-                        select(Cars).where(Cars.link == link)
-                    )
-                    date_result = data.scalar()
-                    if date_result is not None:
-                        if date_result.price_usd != price_usd:
-                            await session.execute(
-                                update(Cars)
-                                .where(Cars.id == date_result.id)
-                                .values(
-                                    price_blr=price_byn,
-                                    price_usd=price_usd,
-                                    date_add=datetime.today(),
-                                )
-                            )
-                            await session.commit()
-                    else:
-                        await session.execute(
-                            insert(Cars).values(
-                                name=name,
-                                site="av.by",
-                                link=link,
-                                date_pub=date_pub,
-                                price_usd=price_usd,
-                                price_blr=price_byn,
-                                odometer=odometer,
-                                year=year,
-                            )
-                        )
-                        await session.commit()
+                await parser_av(
+                    name=name,
+                    year=year,
+                    link=link,
+                    date_pub=date_pub,
+                    price_byn=price_byn,
+                    price_usd=price_usd,
+                    odometer=odometer,
+                )
 
 
 async def main(min_price, max_price):
+    """
+    Функция, для парсинга сайта www.av.by
+    :param min_price: минимальная цена
+    :param max_price: максимальная цена
+    :return:
+    """
     async with aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(80),
         connector=aiohttp.TCPConnector(limit=2),
@@ -231,7 +219,3 @@ async def main(min_price, max_price):
             for url in all_urls
         ]
         return await asyncio.gather(*task)
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))

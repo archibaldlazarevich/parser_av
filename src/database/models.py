@@ -11,6 +11,10 @@ class Base(DeclarativeBase):
 
 
 class Cars(Base):
+    """
+    Класс описывающий модель автомобиля для базы данных
+    """
+
     __tablename__ = "cars"
     id: Mapped[int] = mapped_column(primary_key=True)
     name: Mapped[str] = mapped_column(String(50), nullable=False)
@@ -37,9 +41,13 @@ class Cars(Base):
 
 
 class Users(Base):
+    """
+    Класс описывающий пользователя в базе данных
+    """
+
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     chat_id: Mapped[int] = mapped_column(Integer, unique=True)
     date: Mapped[datetime.datetime] = mapped_column(
-        Date, default=datetime.datetime.today()
+        Date, default=datetime.datetime.now
     )
