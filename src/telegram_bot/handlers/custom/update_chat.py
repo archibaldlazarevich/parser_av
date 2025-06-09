@@ -10,6 +10,7 @@ from src.database.func import get_update_models, get_users_id
 bot = Bot(token=BOT_TOKEN)
 scheduler = AsyncIOScheduler()
 
+
 async def send_hourly_message():
     if 8 <= datetime.now().hour < 23:
         result = await get_update_models()
@@ -21,15 +22,12 @@ async def send_hourly_message():
                         await bot.send_message(chat_id[0], car[0])
 
 
-
 async def scheduler_start():
     await asyncio.sleep(5)
-    scheduler.add_job(
-        send_hourly_message, trigger="interval", minutes=45
-    )
+    scheduler.add_job(send_hourly_message, trigger="interval", minutes=45)
     scheduler.start()
     await asyncio.Event().wait()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     asyncio.run(scheduler_start())

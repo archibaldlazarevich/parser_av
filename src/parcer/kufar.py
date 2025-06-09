@@ -1,6 +1,7 @@
 """
 Парсер kufar.by
 """
+
 from datetime import datetime
 
 import aiohttp
@@ -12,6 +13,7 @@ import json
 from sqlalchemy import insert, Result, select, update
 
 from src.database.create_db import get_db_session
+from src.database.func import parser_kufar
 from src.database.models import Cars
 
 user = fake_useragent.UserAgent(
@@ -116,13 +118,13 @@ async def parser_kufar_by(
     max_price: int,
 ):
     """
-        Функция парсера kufar.by
-        :param session:
-        :param url: ссылка для парсинга
-        :param min_price: минимальная цена в usd
-        :param max_price: максимальная цена в usd
-        :return:
-        """
+    Функция парсера kufar.by
+    :param session:
+    :param url: ссылка для парсинга
+    :param min_price: минимальная цена в usd
+    :param max_price: максимальная цена в usd
+    :return:
+    """
     async with session.get(
         url.format(min_price=min_price, max_price=max_price), headers=header
     ) as resp:
@@ -149,37 +151,15 @@ async def parser_kufar_by(
                 i.get("list_time"), "%Y-%m-%dT%H:%M:%SZ"
             )
 
-            async with get_db_session() as session:
-                data: Result[tuple[Cars]] = await session.execute(
-                    select(Cars).where(Cars.link == link)
-                )
-                date_result = data.scalar()
-                if date_result is not None:
-                    if date_result.price_usd != price_usd:
-                        await session.execute(
-                            update(Cars)
-                            .where(Cars.id == date_result.id)
-                            .values(
-                                price_blr=price_byn,
-                                price_usd=price_usd,
-                                date_add=datetime.today(),
-                            )
-                        )
-                        await session.commit()
-                else:
-                    await session.execute(
-                        insert(Cars).values(
-                            name=name,
-                            site="kufar.by",
-                            link=link,
-                            date_pub=date_pub,
-                            price_usd=price_usd,
-                            price_blr=price_byn,
-                            odometer=odometer,
-                            year=year,
-                        )
-                    )
-                    await session.commit()
+            await parser_kufar(
+                name=name,
+                year=year,
+                link=link,
+                date_pub=date_pub,
+                price_byn=price_byn,
+                price_usd=price_usd,
+                odometer=odometer,
+            )
 
 
 async def main(min_price, max_price):
@@ -198,7 +178,3 @@ async def main(min_price, max_price):
             for key, value in urls_list.items()
         ]
         return await asyncio.gather(*task)
-
-
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))

@@ -1,6 +1,7 @@
 """
 Парсер сайта abw
 """
+
 import dateparser
 import aiohttp
 import bs4
@@ -9,6 +10,7 @@ import fake_useragent
 from datetime import datetime, timedelta
 
 from src.database.create_db import get_db_session
+from src.database.func import parser_abw
 from src.database.models import Cars
 from sqlalchemy import insert, select, Result, update
 
@@ -20,7 +22,7 @@ user = fake_useragent.UserAgent(
 ).random
 header = {"user-agent": user}
 
-audi_url = ( # просто ссылку вставить из настроенного поиска на сайте и заменить цены на price_{min_price}:{max_price}
+audi_url = (  # просто ссылку вставить из настроенного поиска на сайте и заменить цены на price_{min_price}:{max_price}
     "https://abw.by/cars/brand_audi/model_q5/generation_i-8r-rest"
     "/price_{min_price}:{max_price}/engine_benzin/transmission_at"
     "#classified-listing-adverts"
@@ -118,7 +120,7 @@ urls_list = [
 ]
 
 model_dict = {
-    "q5": "Audi_q5", # ключ q5 должен быть как в ссылке пример - /model_q5
+    "q5": "Audi_q5",
     "x-trail": "Nissan_x_trail",
     "outlander": "Mitsubishi_outlander",
     "equinox": "Chevrolet_equinox",
@@ -139,7 +141,7 @@ async def parser_abw_by(
     min_price: int,
     max_price: int,
 ):
-    """"
+    """ "
     Функция парсера abw.by
     :param session:
     :param url: ссылка для парсинга
@@ -167,7 +169,10 @@ async def parser_abw_by(
             if i.attrs["class"] == ["top__left"]:
                 data_car = i.find("a", {"class": "top__title"})
                 data_link = data_car.get("href").split("/")
-                result[8] = int(data_car.text.split()[-1])
+                if ',' in  data_car.text.split()[-1]:
+                    result[8] = ''
+                else:
+                    result[8] = int(data_car.text.split()[-1])
                 model = data_link[4]
                 data_gas = i.find("ul", {"class": "top__params"}).text
                 if "бензин" in data_gas:
@@ -205,7 +210,7 @@ async def parser_abw_by(
                     )
                 elif "назад" not in date_init.lower():
                     # locale.setlocale(locale.LC_ALL, ("ru_RU", "UTF-8"))
-                    # date_pub = datetime.strptime(date_init.lower(), "%d %B %Y")
+                    # date_pub = datetime.strptime(date_init.lower(), "%d %B %Y") # убрал, т.к работат на русском сервере и там системно такие же настройки
                     date_pub = dateparser.parse(
                         date_init.lower(), languages=["ru"]
                     )
@@ -221,43 +226,19 @@ async def parser_abw_by(
 
             if len(result) == 8:
                 if result[7] == 1:
-                    async with get_db_session() as session:
-                        data: Result[tuple[Cars]] = await session.execute(
-                            select(Cars).where(Cars.link == result[2])
-                        )
-                        date_result = data.scalar()
-                        if date_result is not None:
-                            if date_result.price_usd != result[6]:
-                                await session.execute(
-                                    update(Cars)
-                                    .where(Cars.id == date_result.id)
-                                    .values(
-                                        price_blr=result[5],
-                                        price_usd=result[6],
-                                        date_add=datetime.today(),
-                                    )
-                                )
-                                await session.commit()
-                        else:
-                            await session.execute(
-                                insert(Cars).values(
-                                    name=result[1],
-                                    site="abw.by",
-                                    link=result[2],
-                                    date_pub=result[4],
-                                    price_usd=result[6],
-                                    price_blr=result[5],
-                                    odometer=result[3],
-                                    year=result[8],
-                                )
-                            )
-                            await session.commit()
+                    await parser_abw(result=result)
                     result.clear()
                 else:
                     result.clear()
 
 
 async def main(min_price, max_price):
+    """
+    Функция запуска парсера для сайта www.abw.by
+    :param min_price: минимальная цена
+    :param max_price: максимальная цена
+    :return:
+    """
     async with aiohttp.ClientSession(
         timeout=aiohttp.ClientTimeout(80),
         connector=aiohttp.TCPConnector(limit=2),
@@ -272,7 +253,3 @@ async def main(min_price, max_price):
             for url in urls_list
         ]
         return await asyncio.gather(*task)
-
-#
-# if __name__ == "__main__":
-#     asyncio.run(main(min_price=12000, max_price=17000))

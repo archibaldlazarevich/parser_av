@@ -21,17 +21,34 @@ year_reply = ReplyKeyboardMarkup(
 )
 
 
-async def check_number():
+async def check_number() -> (list, ReplyKeyboardMarkup):
+    """
+    Функция возвращает клавиатуру из автомобилей
+    :return:
+    """
     car_name = await get_car_name()
-    keyboard = ReplyKeyboardBuilder()
-    for car in car_name:
-        keyboard.add(KeyboardButton(text=car))
-    return keyboard.adjust(1).as_markup(resize_keyboard=True)
+    if car_name:
+        all_data = [car for car in car_name]
+        keyboard = ReplyKeyboardBuilder()
+        for car in all_data:
+            keyboard.add(KeyboardButton(text=car))
+        markup =  keyboard.adjust(1).as_markup(resize_keyboard=True)
+        return all_data, markup
+    return False
 
 
-async def check_year(car_name: str):
+async def check_year(car_name: str) -> (list, ReplyKeyboardMarkup):
+    """
+    Функция возвращает клавиатуру из годов впуска автомобилей
+    :param car_name:
+    :return:
+    """
     car_year = await get_car_year(car_name=car_name)
-    keyboard = ReplyKeyboardBuilder()
-    for year in car_year:
-        keyboard.add(KeyboardButton(text=str(year)))
-    return keyboard.adjust(1).as_markup(resize_keyboard=True)
+    if car_year:
+        all_data = [str(year) for year in car_year]
+        keyboard = ReplyKeyboardBuilder()
+        for year in all_data:
+            keyboard.add(KeyboardButton(text=year))
+        markup = keyboard.adjust(1).as_markup(resize_keyboard=True)
+        return all_data, markup
+    return False

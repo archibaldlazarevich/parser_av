@@ -2,9 +2,8 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
-from aiogram.client.telegram import TelegramAPIServer
 from aiogram.types import BotCommand, BotCommandScopeDefault
-from aiogram.client.session.aiohttp import AiohttpSession
+
 
 from src.telegram_bot.handlers.custom.update_with_new_cars import router_update
 from src.telegram_bot.handlers.default.start import router_start
@@ -20,6 +19,7 @@ from src.telegram_bot.handlers.custom.check_average import (
 )
 
 from config.config import BOT_TOKEN, DEFAULT_COMMANDS
+from src.telegram_bot.middlewares.middlewares import AccessMiddleware
 
 bot = Bot(
     token=BOT_TOKEN,
@@ -49,6 +49,7 @@ async def main():
         router_cars_counter,
     )
     dp.startup.register(start_bot)
+    dp.message.middleware(AccessMiddleware())
     try:
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(
