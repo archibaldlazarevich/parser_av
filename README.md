@@ -1,4 +1,4 @@
-## Paser_av - это телеграмм бот работающий на парсинге сайтов av.by, abw.by, kufar.by
+## Paser_av - это телеграмм бот для получения моделей для получения  на парсинге сайтов av.by, abw.by, kufar.by
 
 ### Функционал телеграм бота :
     /start - Запустить бота
@@ -25,7 +25,7 @@
 4. **Запуск через Docker**  
     Для удобства можно использовать Docker. 
     Запуск:
-    docker-compose up -d
+    docker compose up --build
     Остановка:
-    docker-compose down
+    docker compose down
 
